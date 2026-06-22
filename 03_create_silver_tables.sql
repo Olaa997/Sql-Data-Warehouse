@@ -165,11 +165,11 @@ CREATE TABLE silver.crm_Monthly_Pulse_Timeseries (
     Pulse_Date              DATE            NOT NULL,
 
     -- Time Dimensions
-    Year_Month              VARCHAR(7)      NULL,   -- ✅ fixed: '2018-01' is not a full date
+    Year_Month              VARCHAR(7)      NULL,   
     Month_Number            INT             NULL,
 
     -- Pulse Metrics
-    Monthly_Pulse_Score     DECIMAL(5, 1)   NULL,   -- ✅ fixed: was missing entirely
+    Monthly_Pulse_Score     DECIMAL(5, 1)   NULL,   
     Culture_Band            VARCHAR(50)     NULL,
 
     -- Metadata
