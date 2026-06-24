@@ -46,30 +46,5 @@ BEGIN
 END;
 GO
 
-IF SCHEMA_ID(N'ops') IS NULL
-BEGIN
-   EXEC(N'CREATE SCHEMA ops');
-END;
-GO
 
-IF NOT EXISTS (
-    SELECT 1
-    FROM sys.database_principals
-    WHERE name = N'dw_etl_executor'
-      AND type = N'R'
-)
-BEGIN
-    CREATE ROLE dw_etl_executor;
-END;
-GO
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON SCHEMA::bronze TO dw_etl_executor;
-
-GRANT SELECT, INSERT, UPDATE, DELETE, ALTER ON SCHEMA::staging TO dw_etl_executor;
-
-GRANT SELECT, INSERT, UPDATE, DELETE ON SCHEMA::silver TO dw_etl_executor;
-
-GRANT SELECT, INSERT, UPDATE, DELETE ON SCHEMA::gold TO dw_etl_executor;
-
-GRANT SELECT, INSERT, UPDATE, DELETE ON SCHEMA::ops TO dw_etl_executor;
-GO
