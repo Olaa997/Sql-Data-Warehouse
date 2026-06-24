@@ -89,6 +89,67 @@ CREATE INDEX ix_gold_dim_Employee_Gender        ON gold.dim_Employee(Gender);
 CREATE INDEX ix_gold_dim_Employee_Ethnicity     ON gold.dim_Employee(Ethnicity);
 GO
 
+
+-- ============================================================
+--dim_Candidate
+-- ============================================================
+CREATE TABLE gold.dim_Candidate (
+    Candidate_Key       INT             IDENTITY(1,1)   NOT NULL CONSTRAINT pk_gold_dim_Candidate PRIMARY KEY,
+    Candidate_ID        VARCHAR(20)     NULL,
+    Req_ID              VARCHAR(20)     NULL,
+    Pipeline_Status     VARCHAR(50)     NULL,
+    Skill_Score         DECIMAL(5, 2)   NULL,
+    Culture_Score       DECIMAL(5, 2)   NULL,
+    Potential_Score     DECIMAL(5, 2)   NULL,
+    LQI                 DECIMAL(5, 2)   NULL,
+    True_LQI            DECIMAL(5, 2)   NULL,
+    Bias_Flag           BIT             NULL,
+    Gender              VARCHAR(10)     NULL,
+    Ethnicity           VARCHAR(50)     NULL,
+    Age_Band            VARCHAR(20)     NULL,
+    Education_Level     VARCHAR(50)     NULL,
+    meta_created_at     DATETIME2(6)    NOT NULL CONSTRAINT df_gold_dim_Candidate_created_at DEFAULT SYSUTCDATETIME()
+);
+
+CREATE INDEX ix_gold_dim_Candidate_Candidate_ID     ON gold.dim_Candidate(Candidate_ID);
+CREATE INDEX ix_gold_dim_Candidate_Pipeline_Status  ON gold.dim_Candidate(Pipeline_Status);
+CREATE INDEX ix_gold_dim_Candidate_Gender           ON gold.dim_Candidate(Gender);
+CREATE INDEX ix_gold_dim_Candidate_Ethnicity        ON gold.dim_Candidate(Ethnicity);
+GO
+
+-- ============================================================
+--dim_Manager
+-- ============================================================
+CREATE TABLE gold.dim_Manager (
+    Manager_Key         INT             IDENTITY(1,1)   NOT NULL CONSTRAINT pk_gold_dim_Manager PRIMARY KEY,
+    Manager_ID          VARCHAR(20)     NULL,
+    Manager_Effect      DECIMAL(10, 4)  NULL,
+    Is_Bad_Manager      BIT             NULL,
+    Is_Biased_Manager   BIT             NULL,
+    meta_created_at     DATETIME2(6)    NOT NULL CONSTRAINT df_gold_dim_Manager_created_at DEFAULT SYSUTCDATETIME()
+);
+
+CREATE INDEX ix_gold_dim_Manager_Manager_ID         ON gold.dim_Manager(Manager_ID);
+CREATE INDEX ix_gold_dim_Manager_Is_Bad_Manager     ON gold.dim_Manager(Is_Bad_Manager);
+CREATE INDEX ix_gold_dim_Manager_Is_Biased_Manager  ON gold.dim_Manager(Is_Biased_Manager);
+GO
+
+
+-- ============================================================
+-- fact_Department
+-- ============================================================
+CREATE TABLE gold.dim_Department (
+    Department_Key      INT             IDENTITY(1,1)   NOT NULL CONSTRAINT pk_gold_dim_Department PRIMARY KEY,
+    Department          VARCHAR(100)    NULL,
+    Role                VARCHAR(100)    NULL,
+    meta_created_at     DATETIME2(6)    NOT NULL CONSTRAINT df_gold_dim_Department_created_at DEFAULT SYSUTCDATETIME()
+);
+
+CREATE INDEX ix_gold_dim_Department_Department  ON gold.dim_Department(Department);
+CREATE INDEX ix_gold_dim_Department_Role        ON gold.dim_Department(Role);
+GO
+
+
 -- ============================================================
 -- fact_Recruitment
 -- ============================================================
