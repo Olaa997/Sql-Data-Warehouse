@@ -1,192 +1,170 @@
-/*
-================================================================================
-SCRIPT: 01_create_bronze_tables.sql
-PURPOSE: Creates SQL Server bronze tables for raw, string-first data capture.
-
-Bronze tables keep source values as VARCHAR, plus load metadata:
-  - batch_id
-  - source_file
-  - source_row_number
-  - loaded_at
-  - row_hash
-================================================================================
-*/
 USE HR_Analytics;
 GO
 
-IF OBJECT_ID(N'bronze.crm_Recruitment', N'U') IS NULL
-BEGIN
-    CREATE TABLE bronze.crm_Recruitment (
-        -- Surrogate key
-        bronze_record_id        BIGINT IDENTITY(1,1) NOT NULL
-            CONSTRAINT pk_bronze_crm_recruitment PRIMARY KEY,
+-- crm_Recruitment
+IF OBJECT_ID('bronze.crm_Recruitment', 'U') IS NOT NULL
+    DROP TABLE bronze.crm_Recruitment;
+GO
 
-        -- Raw source columns — all VARCHAR, all NULL
-        Req_ID                  VARCHAR(255)        NULL,
-        Candidate_ID            VARCHAR(255)        NULL,
-        Employee_ID             VARCHAR(255)        NULL,
-        Pipeline_Status         VARCHAR(255)        NULL,
-        Vacancy_Start_Date      VARCHAR(255)        NULL,
-        Hire_Date               VARCHAR(255)        NULL,
-        Days_to_Fill            VARCHAR(255)        NULL,   
-        Sourcing_Channel        VARCHAR(255)        NULL,   
-        Sourcing_Cost           VARCHAR(255)        NULL,   
-        Cost_of_Vacancy         VARCHAR(255)        NULL,   
-        Total_Acquisition_Cost  VARCHAR(255)        NULL,   
-        Skill_Score             VARCHAR(255)        NULL,  
-        Culture_Score           VARCHAR(255)        NULL,   
-        Potential_Score         VARCHAR(255)        NULL,   
-        LQI                     VARCHAR(255)        NULL,   
-        True_LQI                VARCHAR(255)        NULL,   
-        Bias_Flag               VARCHAR(255)        NULL,  
-        Gender                  VARCHAR(255)        NULL,   
-        Ethnicity               VARCHAR(255)        NULL,  
-        Age_Band                VARCHAR(255)        NULL,   
-        Education_Level         VARCHAR(255)        NULL,   
+CREATE TABLE bronze.crm_Recruitment (
+    bronze_record_id        BIGINT IDENTITY(1,1) NOT NULL 
+        CONSTRAINT pk_bronze_crm_recruitment PRIMARY KEY,
 
-        -- Pipeline metadata 
-        batch_id                UNIQUEIDENTIFIER    NOT NULL,
-        source_file             NVARCHAR(4000)      NOT NULL,
-        source_row_number       INT                 NOT NULL,
-        loaded_at               DATETIME2(6)        NOT NULL,
-        row_hash                VARBINARY(32)       NOT NULL
-    );
+   -- Keys
+    Req_ID                  VARCHAR(50),    
+    Candidate_ID            VARCHAR(50),    
+    Employee_ID             VARCHAR(50),   
 
-    CREATE UNIQUE INDEX ux_bronze_crm_recruitment_req_id
-        ON bronze.crm_Recruitment(Req_ID)
-        WHERE Req_ID IS NOT NULL;
-END;
+    -- Pipeline
+    Pipeline_Status         VARCHAR(50),    
+    Vacancy_Start_Date      DATE,            
+    Hire_Date               DATE,          
+    Days_to_Fill            INT,           
+
+    -- Sourcing
+    Sourcing_Channel        VARCHAR(100),    
+    Sourcing_Cost           DECIMAL(18, 2),    
+    Cost_of_Vacancy         DECIMAL(18, 2),  
+    Total_Acquisition_Cost  DECIMAL(18, 2),    
+
+    -- Scores
+    Skill_Score             DECIMAL(5, 2),   
+    Culture_Score           DECIMAL(5, 2),   
+    Potential_Score         DECIMAL(5, 2),  
+    LQI                     DECIMAL(5, 2),   
+    True_LQI                DECIMAL(5, 2),   
+    Bias_Flag               BIT,            
+
+    -- Demographics
+    Gender                  VARCHAR(10),    
+    Ethnicity               VARCHAR(50),     
+    Age_Band                VARCHAR(20),     
+    Education_Level         VARCHAR(50),     
+
+
+    data_source             VARCHAR(50)  DEFAULT 'CRM_RECRUITMENT_CSV',
+    loaded_at               DATETIME     DEFAULT GETDATE()
+);
+GO
+
+-- crm_Employee_Master
+IF OBJECT_ID('bronze.crm_Employee_Master', 'U') IS NOT NULL
+    DROP TABLE bronze.crm_Employee_Master;
+GO
+
+CREATE TABLE bronze.crm_Employee_Master (
+    bronze_record_id        BIGINT IDENTITY(1,1) NOT NULL 
+        CONSTRAINT pk_bronze_crm_Employee_Master PRIMARY KEY,
+
+      Employee_ID             VARCHAR(20),    
+    Candidate_ID              VARCHAR(20),     
+
+    -- Employment Details
+    Hire_Date               DATE,            
+    Department              VARCHAR(100),   
+    Role                    VARCHAR(100),    
+    Base_Salary            DECIMAL(18, 2),     
+    Manager_ID             VARCHAR(20),     
+    Manager_Effect         DECIMAL(10,4),   
+    Is_Bad_Manager         BIT,             
+    Is_Biased_Manager      BIT,            
+
+    -- Demographics
+    Gender                  VARCHAR(10),    
+    Ethnicity               VARCHAR(50),    
+    Age_Band                VARCHAR(20),     
+    Education_Level         VARCHAR(50),     
+    Skill_Score             DECIMAL(5, 2),  
+    Culture_Score           DECIMAL(5, 2),   
+    Potential_Score         DECIMAL(5, 2),   
+    LQI                     DECIMAL(5, 2),   
+
+
+    data_source             VARCHAR(50)  DEFAULT 'CRM_EMPLOYEE_MASTER_CSV',
+    loaded_at               DATETIME     DEFAULT GETDATE()
+);
 GO
 
 
-IF OBJECT_ID(N'bronze.crm_Employee_Master', N'U') IS NULL
-BEGIN
-    CREATE TABLE bronze.crm_Employee_Master (
-        -- Surrogate key
-        bronze_record_id        BIGINT IDENTITY(1,1) NOT NULL
-            CONSTRAINT pk_bronze_crm_Employee_Master PRIMARY KEY,
-
-        -- Raw source columns — all VARCHAR, all NULL
-        Employee_ID             VARCHAR(255)        NULL,
-        Candidate_ID            VARCHAR(255)        NULL,
-        Hire_Date               VARCHAR(255)        NULL,
-        Department              VARCHAR(255)        NULL,
-        Role                    VARCHAR(255)        NULL,
-        Base_Salary             VARCHAR(255)        NULL,
-        Manager_ID              VARCHAR(255)        NULL,
-        Manager_Effect          VARCHAR(255)        NULL,   
-        Is_Bad_Manager          VARCHAR(255)        NULL,   
-        Is_Biased_Manager       VARCHAR(255)        NULL,   
-        Gender                  VARCHAR(255)        NULL,       
-        Ethnicity               VARCHAR(255)        NULL,   
-        Age_Band                VARCHAR(255)        NULL,   
-        Education_Level         VARCHAR(255)        NULL,  
-        Skill_Score             VARCHAR(255)        NULL,   
-        Culture_Score           VARCHAR(255)        NULL,   
-        Potential_Score         VARCHAR(255)        NULL,   
-        LQI                     VARCHAR(255)        NULL,   
-
-
-        -- Pipeline metadata 
-        batch_id                UNIQUEIDENTIFIER    NOT NULL,
-        source_file             NVARCHAR(4000)      NOT NULL,
-        source_row_number       INT                 NOT NULL,
-        loaded_at               DATETIME2(6)        NOT NULL,
-        row_hash                VARBINARY(32)       NOT NULL
-    );
-
-    CREATE UNIQUE INDEX ux_bronze_crm_Employee_Master_Employee_ID
-        ON bronze.crm_Employee_Master(Employee_ID)
-        WHERE Employee_ID IS NOT NULL;
-END;
+IF OBJECT_ID('bronze.crm_Performance_Timeseries', 'U') IS NOT NULL
+    DROP TABLE bronze.crm_Performance_Timeseries;
 GO
 
+CREATE TABLE bronze.crm_Performance_Timeseries (
+    bronze_record_id         BIGINT IDENTITY(1,1) NOT NULL 
+        CONSTRAINT pk_bronze_crm_Performance_Timeseries PRIMARY KEY,
 
-IF OBJECT_ID(N'bronze.crm_Performance_Timeseries', N'U') IS NULL
-BEGIN
-    CREATE TABLE bronze.crm_Performance_Timeseries (
-        bronze_record_id BIGINT IDENTITY(1,1) NOT NULL CONSTRAINT pk_bronze_crm_Performance_Timeseries PRIMARY KEY,
-        Employee_ID VARCHAR(255) NULL,
-        Quarter_Label VARCHAR(255) NULL,
-        Quarter_Number VARCHAR(255) NULL,
-        Quarter_Date VARCHAR(255) NULL,
-        Tenure_Quarters VARCHAR(255) NULL,
-        KPI_Achievement VARCHAR(255) NULL,
-        Quality_of_Work VARCHAR(255) NULL,
-        Skill_Acquisition_Score VARCHAR(255) NULL,
+   Employee_ID             VARCHAR(20),     
+    Quarter_Date            DATE,           
 
-        -- Pipeline metadata 
-        batch_id UNIQUEIDENTIFIER NOT NULL,
-        source_file NVARCHAR(4000) NOT NULL,
-        source_row_number INT NOT NULL,
-        loaded_at DATETIME2(6) NOT NULL,
-        row_hash VARBINARY(32) NOT NULL
-        
-    );
+    -- Time Dimensions
+    Quarter_Label           VARCHAR(10),  
+    Quarter_Number          INT,           
+    Tenure_Quarters         INT,             
 
-    CREATE UNIQUE INDEX ux_bronze_crm_Performance_Timeseries_order_product
-        ON bronze.crm_Performance_Timeseries(Employee_ID, Quarter_Label)
-        WHERE Employee_ID IS NOT NULL AND Quarter_Label IS NOT NULL;
-END;
+    -- Performance Metrics
+    KPI_Achievement         DECIMAL(5, 4),    
+    Quality_of_Work         DECIMAL(5, 4),  
+    Skill_Acquisition_Score DECIMAL(5, 4), 
+    data_source              VARCHAR(50)  DEFAULT 'CRM_PERFORMANCE_TIMESERIES_CSV',
+    loaded_at                DATETIME     DEFAULT GETDATE()
+);
 GO
 
-IF OBJECT_ID(N'bronze.crm_Lifecycle_Retention', N'U') IS NULL
-BEGIN
-    CREATE TABLE bronze.crm_Lifecycle_Retention (
-        bronze_record_id        BIGINT IDENTITY(1,1) NOT NULL 
-            CONSTRAINT pk_bronze_crm_Lifecycle_Retention PRIMARY KEY,
-        Employee_ID             VARCHAR(255)        NULL,
-        Employment_Status       VARCHAR(255)        NULL,
-        Hire_Date               VARCHAR(255)        NULL,
-        Termination_Date        VARCHAR(255)        NULL,
-        Total_Tenure_Months     VARCHAR(255)        NULL,
-        Comp_vs_Market          VARCHAR(255)        NULL,
-        Final_Salary            VARCHAR(255)        NULL,
-        Avg_KPI_Career          VARCHAR(255)        NULL,
-        Promotion_Count         VARCHAR(255)        NULL,
-        Last_Promotion_Date     VARCHAR(255)        NULL,   
-        Exit_Reason             VARCHAR(255)        NULL,
-        Attrition_Risk_Score    VARCHAR(255)        NULL,
-
-        -- Pipeline metadata
-        batch_id                UNIQUEIDENTIFIER    NOT NULL,
-        source_file             NVARCHAR(4000)      NOT NULL,
-        source_row_number       INT                 NOT NULL,
-        loaded_at               DATETIME2(6)        NOT NULL,
-        row_hash                VARBINARY(32)       NOT NULL
-    );
-
-    CREATE UNIQUE INDEX ux_bronze_crm_lifecycle_retention_employee_id
-        ON bronze.crm_Lifecycle_Retention(Employee_ID)
-        WHERE Employee_ID IS NOT NULL;
-END;
+-- crm_Lifecycle_Retention 
+IF OBJECT_ID('bronze.crm_Lifecycle_Retention', 'U') IS NOT NULL
+    DROP TABLE bronze.crm_Lifecycle_Retention;
 GO
 
-IF OBJECT_ID(N'bronze.crm_Monthly_Pulse_Timeseries', N'U') IS NULL
-BEGIN
-    CREATE TABLE bronze.crm_Monthly_Pulse_Timeseries (
-        bronze_record_id        BIGINT IDENTITY(1,1) NOT NULL
-            CONSTRAINT pk_bronze_crm_Monthly_Pulse_Timeseries PRIMARY KEY,
+CREATE TABLE bronze.crm_Lifecycle_Retention (
+    bronze_record_id      BIGINT IDENTITY(1,1) NOT NULL 
+        CONSTRAINT pk_bronze_crm_Lifecycle_Retention PRIMARY KEY,
 
-        -- Raw source columns — all VARCHAR, all NULL
-        Employee_ID             VARCHAR(255)        NULL,
-        Year_Month              VARCHAR(255)        NULL,   
-        Pulse_Date              VARCHAR(255)        NULL,   
-        Month_Number            VARCHAR(255)        NULL,   
-        Monthly_Pulse_Score     VARCHAR(255)        NULL,   
-        Culture_Band            VARCHAR(255)        NULL,  
+   Employee_ID             VARCHAR(50),
 
-        -- Pipeline metadata
-        batch_id                UNIQUEIDENTIFIER    NOT NULL,
-        source_file             NVARCHAR(4000)      NOT NULL,
-        source_row_number       INT                 NOT NULL,
-        loaded_at               DATETIME2(6)        NOT NULL,
-        row_hash                VARBINARY(32)       NOT NULL
-    );
+    -- Lifecycle Details
+    Employment_Status       VARCHAR(50),       
+    Hire_Date               DATE,            
+    Termination_Date        DATE,            
+    Total_Tenure_Months     INT,            
 
-    CREATE UNIQUE INDEX ux_bronze_crm_Monthly_Pulse_Timeseries_employee_pulse
-        ON bronze.crm_Monthly_Pulse_Timeseries(Employee_ID, Pulse_Date)
-        WHERE Employee_ID IS NOT NULL AND Pulse_Date IS NOT NULL;
-END;
+    -- Compensation & Performance
+    Comp_vs_Market          DECIMAL(5, 1),   
+    Final_Salary            DECIMAL(18, 2),  
+    Avg_KPI_Career          DECIMAL(5, 4),    
+    Promotion_Count         INT,
+    Last_Promotion_Date     DATE,          
+
+    -- Attrition
+    Exit_Reason             VARCHAR(255),    
+    Attrition_Risk_Score    DECIMAL(5, 1),    
+
+    data_source           VARCHAR(50)  DEFAULT 'CRM_LIFECYCLE_RETENTION_CSV',
+    loaded_at             DATETIME     DEFAULT GETDATE()
+);
 GO
-   
+
+-- crm_Monthly_Pulse_Timeseries
+IF OBJECT_ID('bronze.crm_Monthly_Pulse_Timeseries', 'U') IS NOT NULL
+    DROP TABLE bronze.crm_Monthly_Pulse_Timeseries;
+GO
+
+CREATE TABLE bronze.crm_Monthly_Pulse_Timeseries (
+    bronze_record_id     BIGINT IDENTITY(1,1) NOT NULL 
+        CONSTRAINT pk_bronze_crm_Monthly_Pulse_Timeseries PRIMARY KEY,
+
+   Employee_ID             VARCHAR(20),    
+    Pulse_Date              DATE,         
+
+    -- Time Dimensions
+    Year_Month              VARCHAR(7),    
+    Month_Number            INT,             
+    -- Pulse Metrics
+    Monthly_Pulse_Score     DECIMAL(5, 1),     
+    Culture_Band            VARCHAR(50),     
+
+
+    data_source          VARCHAR(50)  DEFAULT 'CRM_MONTHLY_PULSE_TIMESERIES_CSV',
+    loaded_at            DATETIME     DEFAULT GETDATE()
+);
+GO
